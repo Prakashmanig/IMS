@@ -100,9 +100,6 @@ export const updateUser = async (req, res) => {
     if (!userid) {
         return res.status(400).json({ message: 'User ID is required' });
     }
-    if (!username && !gender && !password && !email) {
-        return res.status(400).json({ message: 'At least one field (username, gender, password, or email) is required for update' });
-    }
     try {
         const updatedUser = await userModel.
         findByIdAndUpdate(userid,{ username, gender, password, email },{ new: true });
