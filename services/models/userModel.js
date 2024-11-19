@@ -20,6 +20,9 @@ const userSchema = new mongoose.Schema({
         unique: true,
         lowercase: true
     },
+    userprofile: {
+        type: String
+    }
 },{
     timestamps: true,
 })

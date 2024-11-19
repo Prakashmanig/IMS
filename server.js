@@ -7,8 +7,9 @@ const app = express();
 const port = process.env.PORT || 8585;
 
 app.use(express.urlencoded({extended:true}));
-app.use('/', userRouter)
-app.listen(port, (req, res) => {
+app.use('/', userRouter);
+
+app.listen(port, () => {
     console.log(`Server running on port http://localhost:${port}`)
     db()
 })
