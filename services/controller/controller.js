@@ -94,35 +94,27 @@ export const deleteUser = async (req, res) => {
 
 
 // Update a user by ID
-export const updateUser = async (req,res) => {
+export const updateUser = async (req, res) => {
     const { userid } = req.params;
     const { username, gender, password, email } = req.body;
-    if (!userid){
-        return res.status(400).json({message:"User ID is required"})
+    if (!userid) {
+        return res.status(400).json({ message: 'User ID is required' });
+    }
+    if (!username && !gender && !password && !email) {
+        return res.status(400).json({ message: 'At least one field (username, gender, password, or email) is required for update' });
     }
     try {
-        const checkUserID = await userModel.findById(userid);
-        if(!checkUserID){
-            return res.status(404).json({message:"User not found"})
-        }else{
-            if(username){
-                checkUserID.username = username
-            }
-            if(gender){
-                checkUserID.gender = gender
-            }
-            if(password){
-                checkUserID.password = password
-            }
-            if(email){
-                checkUserID.email = email
-            }
-            const updatedUser = await checkUserID.save()
-            return res.status(200).json({message:"User updated successfully", data:updatedUser})
+        const updatedUser = await userModel.
+        findByIdAndUpdate(userid,{ username, gender, password, email },{ new: true });
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: 'User not found' });
         }
-    } catch (err) {
-        return res.status(500).json({message:"Controller internal error", errpr: err.message})
+        res.status(200).json({ message: 'User updated successfully', data: updatedUser });
+    } catch (error) {
+        res.status(500).json({ message: 'Internal server error', error: error.message });
     }
-}
+};
+
 
 
