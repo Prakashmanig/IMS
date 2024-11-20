@@ -15,15 +15,25 @@ export const upload = multer({ storage: storage });
 
 // Post API
 export const createUser = async (req, res) => {
-  const { username, gender, password, cpass, email } = req.body;
+  const {firstname,lastname, username, gender, password, cpass, email } = req.body;
   const userprofile = req.file;
   if (!userprofile) {
     return res.status(400).json({ message: "Please upload a profile" });
   }
-  if (username && gender && password && cpass && email) {
+  if (firstname && lastname && username && gender && password && cpass && email) {
+    const name = firstname+" "+lastname
     if (password !== cpass) {
       return res.status(400).json("Password not match");
     }
+  const usernameRegex = /^[a-z0-9]+$/;
+  if(!usernameRegex.test(username)){
+    return res.status(400).json("Username should only contain lowercase letters and numbers");
+  }
+  const emailRegex = /^[a-z0-9]+@[a-z]+\.[a-z]+$/;
+  if (!email.endsWith('@gmail.com') || !emailRegex.test(email)) {
+    return res.status(400).json({error: 'Email must contain only lowercase letters and numbers and must end with @gmail.com.',
+    });
+  }
     try {
       const checkUserName = await userModel.findOne({username: username});
       if (checkUserName) {
@@ -38,6 +48,7 @@ export const createUser = async (req, res) => {
       const hashPassword = await bcrypt.hash(password, salt);
 
       const user = userModel({
+        name:name,
         username: username,
         gender: gender,
         password: hashPassword,
@@ -162,4 +173,4 @@ export const updateUser = async (req, res) => {
       return res.status(500).json({ message: "Internal server error", error: error.message });
     }
   };
-  
+ 
