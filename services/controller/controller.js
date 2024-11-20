@@ -15,7 +15,7 @@ export const upload = multer({ storage: storage });
 
 // Post API
 export const createUser = async (req, res) => {
-  const {firstname,lastname, username, gender, password, cpass, email } = req.body;
+  const {firstname, lastname, username, gender, password, cpass, email } = req.body;
   const userprofile = req.file;
   if (!userprofile) {
     return res.status(400).json({ message: "Please upload a profile" });
@@ -36,7 +36,7 @@ export const createUser = async (req, res) => {
   }
     try {
       const checkUserName = await userModel.findOne({username: username});
-      if (checkUserName) {
+      if (checkUserName){
         return res.status(400).json("Username allready exists");
       }
       const checkEmail = await userModel.findOne({ email: email });
@@ -132,7 +132,6 @@ export const deleteUser = async (req, res) => {
 // export const updateUser = async (req, res) => {
 //   const { userid } = req.params;
 //   const { username, gender, password, email } = req.body;
-//   const userprofile = req.file
 //   if (!userid) {
 //     return res.status(400).json({ message: "User ID is required" });
 //   }
@@ -140,7 +139,6 @@ export const deleteUser = async (req, res) => {
 //     const updatedUser = await userModel.findByIdAndUpdate(
 //       userid,
 //       { username, gender, password, email},
-//       {userprofile},
 //       { new: true }
 //     );
 //     if (!updatedUser) {
@@ -154,15 +152,26 @@ export const deleteUser = async (req, res) => {
 
 export const updateUser = async (req, res) => {
     const { userid } = req.params;
-    const { username, gender, password, email } = req.body;
-    const userprofile = req.file?.path;
+    const { name, username, gender, password, email } = req.body;
+    const userprofile = req.file.path;
+    
+    const usernameRegex = /^[a-z0-9]+$/;
+    if(!usernameRegex.test(username)){
+      return res.status(400).json("Username should only contain lowercase letters and numbers");
+    }
+    const emailRegex = /^[a-z0-9]+@[a-z]+\.[a-z]+$/;
+    if (!email.endsWith('@gmail.com') || !emailRegex.test(email)) {
+      return res.status(400).json({error: 'Email must contain only lowercase letters and numbers and must end with @gmail.com.',
+      });
+    }
+
     if (!userid) {
       return res.status(400).json({ message: "User ID is required" });
     }
     try {
-      const updateData = { username, gender, password, email };
+      const updateData = { name, username, gender, password, email };
       if (userprofile) { 
-        updateData.userprofile = userprofile 
+        updateData.userprofile = userprofile
     }
       const updatedUser = await userModel.findByIdAndUpdate(userid, updateData,{ new: true });
       if (!updatedUser) {
