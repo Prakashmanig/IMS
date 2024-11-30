@@ -6,6 +6,6 @@ const studentRouter = express.Router();
 
 studentRouter.post('/create-student/admin/:adminid', studentMulter, createStudent);
 studentRouter.get("/login-student", loginStudent);
-studentRouter.put('/update-student/admin/:adminid/:studentid', updateStudent);
+studentRouter.put('/update-student/admin/:adminid/:studentid', studentMulter, updateStudent);
 
 export default studentRouter;

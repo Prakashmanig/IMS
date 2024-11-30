@@ -17,7 +17,7 @@ const store = multer.diskStorage({
        return cb(null, file.originalname)
     }
 })
-export const facultyMulter = multer({storage: store})
+export const facultyMulter = multer({storage: store}).single('facultyProfile')
 
 
 
@@ -106,7 +106,8 @@ export const updateFacultyById = async (req, res) => {
   if (!fid || !mongoose.Types.ObjectId.isValid(fid)) {
     return handleError(res, 400, "Invalid or missing Faculty ID");
   }
-  const { facultyName, facultyEmail, facultyMobile, adminId } = req.body;
+  const { facultyName, facultyEmail, facultyMobile,facultyPassword, adminId } = req.body;
+  const facultyProfile = req.file
   try {
     const admin = await adminModel.findById(adminid);
   if (!admin) {
@@ -120,7 +121,14 @@ export const updateFacultyById = async (req, res) => {
   if (checkId) {
     return handleError(res, 403, "Unauthorized access");
   }
-  const updateData = { facultyName, facultyEmail, facultyMobile, adminId }
+  const updateData = { facultyName, facultyEmail, facultyMobile, facultyPassword, adminId }
+  if (facultyPassword) {
+    const salt = await bcrypt.genSalt(10);
+    updateData.facultyPassword = await bcrypt.hash(facultyPassword, salt);
+  }
+  if (facultyProfile) {
+    updateData.facultyProfile = facultyProfile.filename;
+  }
   const updateFaculty = await facultyModel.findByIdAndUpdate(fid, updateData, {new:true});
   if (!updateFaculty) {
     return handleError(res, 400, "Faculty update failed");
@@ -154,4 +162,37 @@ export const getCourse = async (req, res) => {
   } catch (error) {
     return handleError(res, 400, "Internal Server Error", error);
   }
+}
+
+
+
+// DELETE course by fid and cid
+export const deleteCourse = async(req, res) => {
+    const { fid, cid } = req.params
+    if (!fid ||!mongoose.Types.ObjectId.isValid(fid) ||!cid ||!mongoose.Types.ObjectId.isValid(cid)) {
+        return handleError(res, 400, "Invalid or missing Faculty ID or Course ID");
+    }
+    try {
+      const isValidFid = await facultyModel.findById(fid);
+      if (!isValidFid) {
+        return handleError(res, 404, "Faculty not found");
+      }
+      const isValidCid = await courseModel.findById(cid);
+      if(!isValidCid){
+        return handleError(res, 404, "Course not found");
+      }
+      const isValidFaculty = isValidFid._id.toString() === isValidCid.facultyId.toString()
+      if(isValidFaculty){
+        const deleteCourse = await courseModel.findByIdAndDelete(cid);
+        if (!deleteCourse) {
+          return handleError(res, 404, "Course not found to delete");
+        }else{
+          return handleError(res, 200, "Course deleted successfully", deleteCourse);
+        }
+      }else{
+        return handleError(res, 403, "Unauthorized access to delete this course");
+      }
+    } catch (error) {
+      return handleError(res, 500, "Internal Error", error);
+    }
 }

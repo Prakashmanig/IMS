@@ -102,6 +102,7 @@ export const updateStudent = async(req, res) => {
         return handleError(res, 400, "Invalid or missing Admin ID or Student ID");
     }
     const { studentName, studentEmail, studentMobile, studentGender, studentPassword, adminId} = req.body;
+    const studentProfile = req.file
     try {
         const amdin = await adminModel.findById(adminid)
         if(!amdin){
@@ -123,7 +124,9 @@ export const updateStudent = async(req, res) => {
             const salt = await bcrypt.genSalt(10);
             updateData.studentPassword = await bcrypt.hash(studentPassword, salt);
         }
-
+        if(studentProfile){
+            updateData.studentProfile = studentProfile.filename
+        }
         const updateStudent = await studentModel.findByIdAndUpdate(studentid, updateData, {new : true})
         if(!updateStudent){
             return handleError(res, 400, "Student update failed");

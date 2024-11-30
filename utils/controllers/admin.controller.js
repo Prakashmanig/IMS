@@ -22,7 +22,7 @@ const store = multer.diskStorage({
        return cb(null, file.originalname)
     }
 })
-export const adminMulter = multer({storage: store})
+export const adminMulter = multer({storage: store}).single('adminProfile')
 
 
 // ! POST API (Admin register)
@@ -61,6 +61,65 @@ export const createAdmin = async (req, res) => {
         return handleError(res, 400, "All fields are required");
     }
 };
+
+
+
+//! login admin
+export const loginAdmin = async (req, res) => {
+  const { adminEmail, adminPassword } = req.body;
+  if ( adminEmail && adminPassword) {
+      try {
+          const checkEmail = await adminModel.findOne({ adminEmail: adminEmail });
+          if (!checkEmail) {
+              return handleError(res, 404, "Invaild Email or password");
+          }
+          const isMatch = await bcrypt.compare(adminPassword, checkEmail.adminPassword);
+          if (!isMatch) {
+              return handleError(res, 401, "Invalid Email or password");
+          }
+          return handleError(res, 200, "Admin login successful", checkEmail);
+      } catch (error) {
+          return handleError(res, 500, "Internal Server Error (Faculty Login Error)", error);
+      }
+  }else{
+      return handleError(res, 400, "Email and Password are required");
+  }
+};
+
+
+// Admin Update
+export const updateAdminById = async (req, res) => {
+  const { adminid } = req.params
+  if (!adminid || !mongoose.Types.ObjectId.isValid(adminid)) {
+    return handleError(res, 400, "Invalid or missing Admin ID");
+  }
+  const { adminName, adminEmail, adminPassword } = req.body;
+  const adminProfile = req.file
+  try {
+    const admin = await adminModel.findById(adminid);
+    if (!admin) {
+      return handleError(res, 404, "Admin not found");
+  }
+  const updateData = { adminName, adminEmail, adminPassword }
+  if(adminProfile){
+    updateData.adminProfile = adminProfile.filename;
+  }
+  if(adminPassword){
+    const salt = await bcrypt.genSalt(12);
+    const hashPass = await bcrypt.hash(adminPassword, salt);
+    updateData.adminPassword = hashPass;
+  }
+  const updateAdmin = await adminModel.findByIdAndUpdate(adminid, updateData, {new:true});
+  console.log(12);
+  if (!updateAdmin) {
+    return handleError(res, 400, "Admin update failed");
+  }else{
+    return handleError(res, 200, "Admin updated successfully", updateAdmin);
+  }
+  } catch (error) {
+    return handleError(res, 400, "Internal Server Error", error);
+  }
+}
 
 
 

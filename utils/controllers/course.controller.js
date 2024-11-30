@@ -66,6 +66,50 @@ export const createCourse = async (req, res) => {
 
 
 
+// Update Course by FID and CID
+export const updateCourse = async(req, res) => {
+  const { fid, cid } = req.params;
+  if (!fid ||!mongoose.Types.ObjectId.isValid(fid)) {
+    return handleError(res, 400, "Invalid or missing Faculty ID");
+  }
+  if (!cid ||!mongoose.Types.ObjectId.isValid(cid)) {
+    return handleError(res, 400, "Invalid or missing Course ID");
+  }
+  const { courseTitle, courseContent, courseAuthor, facultyId } = req.body;
+  const coursePdf = req.file
+
+  try {
+    const isValidFacultyId = await facultyModel.findById(fid)
+    if (!isValidFacultyId) {
+      return handleError(res, 404, "Faculty not found");
+    }
+
+    const checkId = isValidFacultyId._id.toString()!== facultyId.toString();
+    if (checkId){
+      return handleError(res, 403, "Unauthorized access");
+    }
+
+    const isValidCourseId = await courseModel.findById(cid);
+    if (!isValidCourseId) {
+      return handleError(res, 404, "Course not found");
+    }
+    const updateData = { courseTitle, courseContent, courseAuthor, facultyId }
+    if (coursePdf) {
+      updateData.coursePdf = coursePdf.filename;
+    }
+
+    const updatedCourse = await courseModel.findByIdAndUpdate(cid, updateData, {new:true});
+    if (!updatedCourse) {
+      return handleError(res, 400, "Course update failed");
+    }else{
+      return handleError(res, 200, "Course updated successfully", updatedCourse);
+    }
+  } catch (error) {
+    return handleError(res, 400, "Internal Server Error", error);
+  }
+}
+
+
 
 
 
